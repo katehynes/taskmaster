@@ -1,0 +1,71 @@
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.settings-dialog {
+  background: var(--surface, #fff);
+  padding: 1.5rem;
+  border-radius: 8px;
+  min-width: 360px;
+  max-width: 90vw;
+}
+
+.settings-dialog h3 {
+  margin: 0 0 1rem;
+}
+
+.settings-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.settings-label-text {
+  font-weight: 500;
+}
+
+.settings-input {
+  padding: 0.5rem;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 80px;
+}
+
+.settings-hint {
+  font-size: 0.85rem;
+  color: var(--muted, #666);
+  margin: 0 0 1rem;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.settings-actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid var(--border, #ccc);
+  background: var(--surface, #fff);
+  cursor: pointer;
+}
+
+.settings-actions button[type='submit'] {
+  background: var(--accent, #3b82f6);
+  color: white;
+  border-color: var(--accent, #3b82f6);
+}
+
+.settings-actions button[type='submit']:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
