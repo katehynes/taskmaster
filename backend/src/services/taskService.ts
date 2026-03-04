@@ -136,7 +136,18 @@ export async function updateTask(
 
 export async function deleteTask(id: string): Promise<boolean> {
   const db = await getDb();
-  db.run("DELETE FROM tasks WHERE id = ?", [id]);
+  const listStmt = db.prepare("SELECT id FROM tasks");
+  const existingIds: string[] = [];
+  while (listStmt.step()) {
+    const row = listStmt.getAsObject() as { id?: string };
+    if (row.id != null) existingIds.push(String(row.id));
+  }
+  listStmt.free();
+
+  const escapedId = id.replace(/'/g, "''");
+  const sql = `DELETE FROM tasks WHERE id = '${escapedId}'`;
+  db.run(sql);
+  const modified = db.getRowsModified();
   saveDb();
-  return db.getRowsModified() > 0;
+  return modified > 0;
 }

@@ -62,7 +62,6 @@
 }
 
 .day-task-list-items--completed .day-task-item .day-task-title {
-  text-decoration: line-through;
   color: var(--muted, #666);
 }
 
