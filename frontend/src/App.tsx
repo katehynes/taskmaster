@@ -11,6 +11,7 @@ import './App.css';
 function App() {
   const today = toISODate(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
+  const [activeView, setActiveView] = useState<'day' | 'calendar'>('day');
   const { tasks, loading, error, refetch } = useTasksForDate(selectedDate);
   const backendOk = useBackendStatus();
 
@@ -100,20 +101,28 @@ function App() {
               setAddModalOpen(true);
             }}
           >
-            New task
+            New Task
           </button>
         </div>
       </header>
 
-      <main className="app-main">
-        <aside className="app-calendar">
-          <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
-        </aside>
-        <section className="app-day-panel">
+      <main className="app-main app-main--full">
+        <section className="app-content">
           {(error || actionError) && (
             <p className="app-error">{error || actionError}</p>
           )}
-          {loading ? (
+
+          {activeView === 'calendar' ? (
+            <div className="app-calendar-screen">
+              <Calendar
+                selectedDate={selectedDate}
+                onSelectDate={(d) => {
+                  setSelectedDate(d);
+                  setActiveView('day');
+                }}
+              />
+            </div>
+          ) : loading ? (
             <p className="app-loading">Loading…</p>
           ) : (
             <DayTaskList
@@ -127,6 +136,23 @@ function App() {
           )}
         </section>
       </main>
+
+      <nav className="app-bottom-nav" aria-label="Primary navigation">
+        <button
+          type="button"
+          className={`app-bottom-nav-item ${activeView === 'day' ? 'is-active' : ''}`}
+          onClick={() => setActiveView('day')}
+        >
+          Day
+        </button>
+        <button
+          type="button"
+          className={`app-bottom-nav-item ${activeView === 'calendar' ? 'is-active' : ''}`}
+          onClick={() => setActiveView('calendar')}
+        >
+          Calendar
+        </button>
+      </nav>
 
       {addModalOpen && (
         <NewTaskModal

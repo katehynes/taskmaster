@@ -48,21 +48,10 @@
   margin: 0;
 }
 
-.day-task-list-section-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--muted, #666);
-  margin: 1rem 0 0.5rem;
-}
-
 .day-task-list-items {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.day-task-list-items--completed .day-task-item .day-task-title {
-  color: var(--muted, #666);
 }
 
 .day-task-item {

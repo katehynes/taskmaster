@@ -30,8 +30,7 @@ export function DayTaskList({
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const active = tasks.filter((t) => !t.completed);
-  const completed = tasks.filter((t) => t.completed);
+  const sorted = [...tasks].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
   const toggleNotes = (id: string) => {
     setExpandedNotes((prev) => {
@@ -47,18 +46,18 @@ export function DayTaskList({
       <div className="day-task-list-header">
         <h2 className="day-task-list-title">{formatDisplayDate(date)}</h2>
         <button type="button" className="day-task-list-add" onClick={onAddTask}>
-          Add task
+          Add Task
         </button>
       </div>
 
       <div className="day-task-list-content">
-        {active.length === 0 && completed.length === 0 && (
+        {sorted.length === 0 && (
           <p className="day-task-list-empty">No tasks for this day.</p>
         )}
 
-        {active.length > 0 && (
+        {sorted.length > 0 && (
           <ul className="day-task-list-items">
-            {active.map((task) => (
+            {sorted.map((task) => (
               <TaskRow
                 key={task.id}
                 task={task}
@@ -72,27 +71,6 @@ export function DayTaskList({
               />
             ))}
           </ul>
-        )}
-
-        {completed.length > 0 && (
-          <>
-            {active.length > 0 && <p className="day-task-list-section-label">Completed</p>}
-            <ul className="day-task-list-items day-task-list-items--completed">
-              {completed.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  editingId={editingId}
-                  setEditingId={setEditingId}
-                  expandedNotes={expandedNotes}
-                  toggleNotes={toggleNotes}
-                  onToggleComplete={onToggleComplete}
-                  onEditTask={onEditTask}
-                  onDeleteTask={onDeleteTask}
-                />
-              ))}
-            </ul>
-          </>
         )}
       </div>
     </div>
