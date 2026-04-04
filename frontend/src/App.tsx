@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
 import { Calendar } from './components/Calendar';
 import { DayTaskList } from './components/DayTaskList';
+import { OutstandingTaskList } from './components/OutstandingTaskList';
 import { SettingsDialog } from './components/SettingsDialog';
 import { useTasksForDate } from './hooks/useTasksForDate';
+import { useOutstandingTasks } from './hooks/useOutstandingTasks';
 import { useBackendStatus } from './hooks/useBackendStatus';
 import { toISODate } from './utils/dateUtils';
 import * as api from './api/tasksApi';
@@ -11,9 +13,20 @@ import './App.css';
 function App() {
   const today = toISODate(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
-  const [activeView, setActiveView] = useState<'day' | 'calendar'>('day');
-  const { tasks, loading, error, refetch } = useTasksForDate(selectedDate);
+  const [activeView, setActiveView] = useState<'day' | 'calendar' | 'outstanding'>('day');
+  const { tasks, loading, error, refetch: refetchDayTasks } = useTasksForDate(selectedDate);
+  const {
+    tasks: outstandingTasks,
+    loading: outstandingLoading,
+    error: outstandingError,
+    refetch: refetchOutstanding,
+  } = useOutstandingTasks();
   const backendOk = useBackendStatus();
+
+  const refetchAll = useCallback(() => {
+    refetchDayTasks();
+    refetchOutstanding();
+  }, [refetchDayTasks, refetchOutstanding]);
 
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -22,33 +35,35 @@ function App() {
       setActionError(null);
       try {
         await api.updateTask(id, { completed });
-        refetch();
+        refetchAll();
       } catch (e) {
         setActionError(e instanceof Error ? e.message : 'Failed to update');
       }
     },
-    [refetch]
+    [refetchAll]
   );
 
   const handleEditTask = useCallback(
     async (
       id: string,
-      updates: { title?: string; notes?: string | null; forDate?: string }
+      updates: { title?: string; notes?: string | null; forDate?: string | null }
     ) => {
       setActionError(null);
       try {
         await api.updateTask(id, updates);
-        refetch();
+        refetchAll();
       } catch (e) {
         setActionError(e instanceof Error ? e.message : 'Failed to update');
       }
     },
-    [refetch]
+    [refetchAll]
   );
 
   const handleAddTask = useCallback(() => {
     setAddModalOpen(true);
     setAddModalDate(selectedDate);
+    setAddModalOutstanding(false);
+    setAddModalAllowOutstandingOption(false);
   }, [selectedDate]);
 
   const handleDeleteTask = useCallback(
@@ -56,22 +71,25 @@ function App() {
       setActionError(null);
       try {
         await api.deleteTask(id);
-        refetch();
+        refetchAll();
       } catch (e) {
         setActionError(e instanceof Error ? e.message : 'Failed to delete');
       }
     },
-    [refetch]
+    [refetchAll]
   );
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addModalDate, setAddModalDate] = useState(selectedDate);
+  const [addModalOutstanding, setAddModalOutstanding] = useState(false);
+  /** When false (Day list “Add Task” only), the modal hides Outstanding and always uses the date field. */
+  const [addModalAllowOutstandingOption, setAddModalAllowOutstandingOption] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleCloseAddModal = useCallback(() => {
     setAddModalOpen(false);
-    refetch();
-  }, [refetch]);
+    refetchAll();
+  }, [refetchAll]);
 
   return (
     <div className="app">
@@ -98,6 +116,8 @@ function App() {
             className="app-new-task"
             onClick={() => {
               setAddModalDate(selectedDate);
+              setAddModalOutstanding(activeView === 'outstanding');
+              setAddModalAllowOutstandingOption(true);
               setAddModalOpen(true);
             }}
           >
@@ -108,8 +128,8 @@ function App() {
 
       <main className="app-main app-main--full">
         <section className="app-content">
-          {(error || actionError) && (
-            <p className="app-error">{error || actionError}</p>
+          {(error || outstandingError || actionError) && (
+            <p className="app-error">{error || outstandingError || actionError}</p>
           )}
 
           {activeView === 'calendar' ? (
@@ -122,6 +142,23 @@ function App() {
                 }}
               />
             </div>
+          ) : activeView === 'outstanding' ? (
+            outstandingLoading ? (
+              <p className="app-loading">Loading…</p>
+            ) : (
+              <OutstandingTaskList
+                tasks={outstandingTasks}
+                onToggleComplete={handleToggleComplete}
+                onEditTask={handleEditTask}
+                onAddTask={() => {
+                  setAddModalDate(selectedDate);
+                  setAddModalOutstanding(true);
+                  setAddModalAllowOutstandingOption(true);
+                  setAddModalOpen(true);
+                }}
+                onDeleteTask={handleDeleteTask}
+              />
+            )
           ) : loading ? (
             <p className="app-loading">Loading…</p>
           ) : (
@@ -152,11 +189,20 @@ function App() {
         >
           Calendar
         </button>
+        <button
+          type="button"
+          className={`app-bottom-nav-item ${activeView === 'outstanding' ? 'is-active' : ''}`}
+          onClick={() => setActiveView('outstanding')}
+        >
+          Outstanding
+        </button>
       </nav>
 
       {addModalOpen && (
         <NewTaskModal
           defaultDate={addModalDate}
+          defaultOutstanding={addModalOutstanding}
+          allowOutstandingOption={addModalAllowOutstandingOption}
           onClose={handleCloseAddModal}
           onCreated={handleCloseAddModal}
         />
@@ -165,7 +211,7 @@ function App() {
       {settingsOpen && (
         <SettingsDialog
           onClose={() => setSettingsOpen(false)}
-          onSaved={refetch}
+          onSaved={refetchAll}
         />
       )}
     </div>
@@ -174,13 +220,23 @@ function App() {
 
 interface NewTaskModalProps {
   defaultDate: string;
+  defaultOutstanding: boolean;
+  /** When false, hide Outstanding and always schedule using the date field (Day view). */
+  allowOutstandingOption: boolean;
   onClose: () => void;
   onCreated: () => void;
 }
 
-function NewTaskModal({ defaultDate, onClose, onCreated }: NewTaskModalProps) {
+function NewTaskModal({
+  defaultDate,
+  defaultOutstanding,
+  allowOutstandingOption,
+  onClose,
+  onCreated,
+}: NewTaskModalProps) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(defaultDate);
+  const [outstanding, setOutstanding] = useState(defaultOutstanding);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -191,9 +247,11 @@ function NewTaskModal({ defaultDate, onClose, onCreated }: NewTaskModalProps) {
     setSaving(true);
     setError(null);
     try {
+      const forDate =
+        allowOutstandingOption && outstanding ? null : date;
       await api.createTask({
         title: title.trim(),
-        forDate: date,
+        forDate,
         notes: notes.trim() || null,
       });
       onCreated();
@@ -219,14 +277,26 @@ function NewTaskModal({ defaultDate, onClose, onCreated }: NewTaskModalProps) {
               autoFocus
             />
           </label>
-          <label>
-            Date
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </label>
+          {allowOutstandingOption && (
+            <label className="modal-checkbox-row">
+              <input
+                type="checkbox"
+                checked={outstanding}
+                onChange={(e) => setOutstanding(e.target.checked)}
+              />
+              Outstanding (no specific day)
+            </label>
+          )}
+          {(!allowOutstandingOption || !outstanding) && (
+            <label>
+              Date
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </label>
+          )}
           <label>
             Notes (optional)
             <textarea

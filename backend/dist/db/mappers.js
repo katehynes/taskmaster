@@ -2,7 +2,7 @@ export function rowToTask(r) {
     return {
         id: r.id,
         title: r.title,
-        forDate: r.for_date,
+        forDate: r.for_date ?? null,
         notes: r.notes,
         completed: Boolean(r.completed),
         createdAt: r.created_at,

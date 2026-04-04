@@ -10,6 +10,8 @@ export interface GetTasksOptions {
   fromDate?: string;
   toDate?: string;
   includeExpired?: boolean;
+  /** When true, return only tasks with no scheduled date (outstanding). */
+  outstanding?: boolean;
 }
 
 export async function getTasks(options: GetTasksOptions = {}): Promise<Task[]> {
@@ -17,6 +19,22 @@ export async function getTasks(options: GetTasksOptions = {}): Promise<Task[]> {
   const settings = await getExpirationDays();
   const today = todayISO();
   const includeExpired = options.includeExpired === true;
+
+  if (options.outstanding) {
+    const stmt = db.prepare(
+      `SELECT id, title, for_date, notes, completed, created_at, updated_at, owner_id
+       FROM tasks
+       WHERE for_date IS NULL
+       ORDER BY created_at`
+    );
+    const result: Task[] = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject() as Record<string, unknown>;
+      result.push(rowToTask(row as unknown as TaskRow));
+    }
+    stmt.free();
+    return result;
+  }
 
   let fromDate = options.fromDate;
   let toDate = options.toDate;
@@ -36,7 +54,7 @@ export async function getTasks(options: GetTasksOptions = {}): Promise<Task[]> {
   const stmt = db.prepare(
     `SELECT id, title, for_date, notes, completed, created_at, updated_at, owner_id
      FROM tasks
-     WHERE for_date >= ? AND for_date <= ?
+     WHERE for_date IS NOT NULL AND for_date >= ? AND for_date <= ?
      ORDER BY for_date, created_at`
   );
   stmt.bind([fromDate, toDate]);
@@ -45,7 +63,11 @@ export async function getTasks(options: GetTasksOptions = {}): Promise<Task[]> {
   while (stmt.step()) {
     const row = stmt.getAsObject() as Record<string, unknown>;
     const task = rowToTask(row as unknown as TaskRow);
-    if (includeExpired || isTaskVisible(task.forDate, settings, today)) {
+    const fd = task.forDate;
+    if (
+      fd != null &&
+      (includeExpired || isTaskVisible(fd, settings, today))
+    ) {
       result.push(task);
     }
   }
@@ -71,10 +93,11 @@ export async function createTask(input: TaskCreateInput): Promise<Task> {
   const now = new Date().toISOString();
   const notes = input.notes ?? null;
 
+  const forDate = input.forDate ?? null;
   db.run(
     `INSERT INTO tasks (id, title, for_date, notes, completed, created_at, updated_at, owner_id)
      VALUES (?, ?, ?, ?, 0, ?, ?, NULL)`,
-    [id, input.title, input.forDate, notes, now, now]
+    [id, input.title, forDate, notes, now, now]
   );
   saveDb();
 
@@ -110,7 +133,10 @@ export async function updateTask(
   existingStmt.free();
 
   const title = input.title ?? (current.title as string);
-  const for_date = input.forDate ?? (current.for_date as string);
+  const for_date =
+    input.forDate !== undefined
+      ? input.forDate
+      : (current.for_date as string | null);
   const notes = input.notes !== undefined ? input.notes : (current.notes as string | null);
   const completed =
     input.completed !== undefined ? (input.completed ? 1 : 0) : (current.completed as number);

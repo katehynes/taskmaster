@@ -6,7 +6,7 @@ interface DayTaskListProps {
   date: string;
   tasks: Task[];
   onToggleComplete: (id: string, completed: boolean) => void;
-  onEditTask: (id: string, updates: { title?: string; notes?: string | null; forDate?: string }) => void;
+  onEditTask: (id: string, updates: { title?: string; notes?: string | null; forDate?: string | null }) => void;
   onAddTask: () => void;
   onDeleteTask: (id: string) => void;
 }
@@ -61,6 +61,7 @@ export function DayTaskList({
               <TaskRow
                 key={task.id}
                 task={task}
+                listDate={date}
                 editingId={editingId}
                 setEditingId={setEditingId}
                 expandedNotes={expandedNotes}
@@ -79,17 +80,19 @@ export function DayTaskList({
 
 interface TaskRowProps {
   task: Task;
+  listDate: string;
   editingId: string | null;
   setEditingId: (id: string | null) => void;
   expandedNotes: Set<string>;
   toggleNotes: (id: string) => void;
   onToggleComplete: (id: string, completed: boolean) => void;
-  onEditTask: (id: string, updates: { title?: string; notes?: string | null; forDate?: string }) => void;
+  onEditTask: (id: string, updates: { title?: string; notes?: string | null; forDate?: string | null }) => void;
   onDeleteTask: (id: string) => void;
 }
 
 function TaskRow({
   task,
+  listDate,
   editingId,
   setEditingId,
   expandedNotes,
@@ -115,6 +118,7 @@ function TaskRow({
         {isEditing ? (
           <TaskEditForm
             task={task}
+            listDate={listDate}
             onSave={(updates) => {
               onEditTask(task.id, updates);
               setEditingId(null);
@@ -162,22 +166,35 @@ function TaskRow({
 
 function TaskEditForm({
   task,
+  listDate,
   onSave,
   onCancel,
 }: {
   task: Task;
-  onSave: (updates: { title?: string; notes?: string | null }) => void;
+  /** The day this list is for (used if the task has no date yet). */
+  listDate: string;
+  onSave: (updates: {
+    title?: string;
+    notes?: string | null;
+    forDate?: string | null;
+  }) => void;
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState(task.title);
   const [notes, setNotes] = useState(task.notes ?? '');
+  const [outstanding, setOutstanding] = useState(task.forDate == null);
+  const [scheduleDate, setScheduleDate] = useState(task.forDate ?? listDate);
 
   return (
     <form
       className="day-task-edit-form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSave({ title, notes: notes.trim() || null });
+        onSave({
+          title,
+          notes: notes.trim() || null,
+          forDate: outstanding ? null : scheduleDate,
+        });
       }}
     >
       <input
@@ -194,6 +211,34 @@ function TaskEditForm({
         placeholder="Notes (optional)"
         rows={2}
       />
+      <label className="day-task-edit-checkbox">
+        <input
+          type="checkbox"
+          checked={outstanding}
+          onChange={(e) => {
+            setOutstanding(e.target.checked);
+            if (!e.target.checked && !scheduleDate) {
+              setScheduleDate(listDate);
+            }
+          }}
+        />
+        Outstanding (no specific day)
+      </label>
+      {!outstanding && (
+        <label className="day-task-edit-date-label">
+          Scheduled date
+          <input
+            type="date"
+            value={scheduleDate}
+            onChange={(e) => setScheduleDate(e.target.value)}
+            className="day-task-edit-date"
+          />
+        </label>
+      )}
+      <p className="day-task-edit-date-hint">
+        Change the date to move this task to another day, or mark as outstanding to remove it from
+        the calendar.
+      </p>
       <div className="day-task-edit-actions">
         <button type="submit">Save</button>
         <button type="button" onClick={onCancel}>

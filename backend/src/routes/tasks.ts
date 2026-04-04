@@ -15,12 +15,14 @@ tasksRouter.get("/", async (req, res) => {
     const fromDate = req.query.fromDate as string | undefined;
     const toDate = req.query.toDate as string | undefined;
     const includeExpired = req.query.includeExpired === "true";
+    const outstanding = req.query.outstanding === "true";
 
     const tasks = await getTasks({
       forDate,
       fromDate,
       toDate,
       includeExpired,
+      outstanding,
     });
     res.json(tasks);
   } catch (err) {
@@ -32,13 +34,13 @@ tasksRouter.get("/", async (req, res) => {
 tasksRouter.post("/", async (req, res) => {
   try {
     const body = req.body as TaskCreateInput;
-    if (!body.title || !body.forDate) {
-      res.status(400).json({ error: "title and forDate are required" });
+    if (!body.title || typeof body.title !== "string") {
+      res.status(400).json({ error: "title is required" });
       return;
     }
     const task = await createTask({
       title: body.title,
-      forDate: body.forDate,
+      forDate: body.forDate ?? null,
       notes: body.notes ?? null,
     });
     res.status(201).json(task);

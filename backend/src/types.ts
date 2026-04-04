@@ -1,7 +1,8 @@
 export interface Task {
   id: string;
   title: string;
-  forDate: string; // ISO date YYYY-MM-DD
+  /** ISO date YYYY-MM-DD, or null when the task is not scheduled to a specific day */
+  forDate: string | null;
   notes: string | null;
   completed: boolean;
   createdAt: string; // ISO datetime
@@ -11,13 +12,15 @@ export interface Task {
 
 export interface TaskCreateInput {
   title: string;
-  forDate: string;
+  /** Omit or set null for an outstanding (undated) task */
+  forDate?: string | null;
   notes?: string | null;
 }
 
 export interface TaskUpdateInput {
   title?: string;
-  forDate?: string;
+  /** Set to an ISO date to schedule; set to null to move back to outstanding */
+  forDate?: string | null;
   notes?: string | null;
   completed?: boolean;
 }

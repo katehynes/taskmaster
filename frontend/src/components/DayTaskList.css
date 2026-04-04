@@ -158,3 +158,69 @@
   color: white;
   border-color: var(--accent, #3b82f6);
 }
+
+.day-task-edit-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted, #475569);
+  cursor: pointer;
+}
+
+.day-task-edit-checkbox input {
+  width: auto;
+  margin: 0;
+}
+
+.day-task-edit-date-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--muted, #475569);
+}
+
+.day-task-edit-date {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 4px;
+  max-width: 100%;
+}
+
+.day-task-edit-date-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted, #64748b);
+  line-height: 1.35;
+}
+
+.outstanding-task-list-hint {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--muted, #64748b);
+  line-height: 1.4;
+}
+
+.outstanding-assign-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--muted, #475569);
+}
+
+.outstanding-assign-date {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 4px;
+  max-width: 100%;
+}
+
+.outstanding-assign-help {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted, #64748b);
+}

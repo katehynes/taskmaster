@@ -3,7 +3,7 @@ import type { Task, Settings } from "../types.js";
 export interface TaskRow {
   id: string;
   title: string;
-  for_date: string;
+  for_date: string | null;
   notes: string | null;
   completed: number;
   created_at: string;
@@ -21,7 +21,7 @@ export function rowToTask(r: TaskRow): Task {
   return {
     id: r.id,
     title: r.title,
-    forDate: r.for_date,
+    forDate: r.for_date ?? null,
     notes: r.notes,
     completed: Boolean(r.completed),
     createdAt: r.created_at,

@@ -144,6 +144,18 @@
   box-sizing: border-box;
 }
 
+.modal-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.modal-checkbox-row input {
+  width: auto;
+  margin: 0;
+}
+
 .modal-actions {
   display: flex;
   gap: 0.5rem;
@@ -184,7 +196,7 @@
   bottom: 0;
   height: 3.75rem;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   background: var(--surface, #fff);
   border-top: 1px solid var(--border, #e5e7eb);
   z-index: 900;

@@ -7,6 +7,19 @@ export async function getTasks(options = {}) {
     const settings = await getExpirationDays();
     const today = todayISO();
     const includeExpired = options.includeExpired === true;
+    if (options.outstanding) {
+        const stmt = db.prepare(`SELECT id, title, for_date, notes, completed, created_at, updated_at, owner_id
+       FROM tasks
+       WHERE for_date IS NULL
+       ORDER BY created_at`);
+        const result = [];
+        while (stmt.step()) {
+            const row = stmt.getAsObject();
+            result.push(rowToTask(row));
+        }
+        stmt.free();
+        return result;
+    }
     let fromDate = options.fromDate;
     let toDate = options.toDate;
     if (options.forDate) {
@@ -23,14 +36,16 @@ export async function getTasks(options = {}) {
     }
     const stmt = db.prepare(`SELECT id, title, for_date, notes, completed, created_at, updated_at, owner_id
      FROM tasks
-     WHERE for_date >= ? AND for_date <= ?
+     WHERE for_date IS NOT NULL AND for_date >= ? AND for_date <= ?
      ORDER BY for_date, created_at`);
     stmt.bind([fromDate, toDate]);
     const result = [];
     while (stmt.step()) {
         const row = stmt.getAsObject();
         const task = rowToTask(row);
-        if (includeExpired || isTaskVisible(task.forDate, settings, today)) {
+        const fd = task.forDate;
+        if (fd != null &&
+            (includeExpired || isTaskVisible(fd, settings, today))) {
             result.push(task);
         }
     }
@@ -50,8 +65,9 @@ export async function createTask(input) {
     const id = randomUUID();
     const now = new Date().toISOString();
     const notes = input.notes ?? null;
+    const forDate = input.forDate ?? null;
     db.run(`INSERT INTO tasks (id, title, for_date, notes, completed, created_at, updated_at, owner_id)
-     VALUES (?, ?, ?, ?, 0, ?, ?, NULL)`, [id, input.title, input.forDate, notes, now, now]);
+     VALUES (?, ?, ?, ?, 0, ?, ?, NULL)`, [id, input.title, forDate, notes, now, now]);
     saveDb();
     const sel = db.prepare("SELECT id, title, for_date, notes, completed, created_at, updated_at, owner_id FROM tasks WHERE id = ?");
     sel.bind([id]);
@@ -75,7 +91,9 @@ export async function updateTask(id, input) {
     const current = existingStmt.getAsObject();
     existingStmt.free();
     const title = input.title ?? current.title;
-    const for_date = input.forDate ?? current.for_date;
+    const for_date = input.forDate !== undefined
+        ? input.forDate
+        : current.for_date;
     const notes = input.notes !== undefined ? input.notes : current.notes;
     const completed = input.completed !== undefined ? (input.completed ? 1 : 0) : current.completed;
     db.run(`UPDATE tasks SET title = ?, for_date = ?, notes = ?, completed = ?, updated_at = ? WHERE id = ?`, [title, for_date, notes, completed, now, id]);
@@ -92,7 +110,18 @@ export async function updateTask(id, input) {
 }
 export async function deleteTask(id) {
     const db = await getDb();
-    db.run("DELETE FROM tasks WHERE id = ?", [id]);
+    const listStmt = db.prepare("SELECT id FROM tasks");
+    const existingIds = [];
+    while (listStmt.step()) {
+        const row = listStmt.getAsObject();
+        if (row.id != null)
+            existingIds.push(String(row.id));
+    }
+    listStmt.free();
+    const escapedId = id.replace(/'/g, "''");
+    const sql = `DELETE FROM tasks WHERE id = '${escapedId}'`;
+    db.run(sql);
+    const modified = db.getRowsModified();
     saveDb();
-    return db.getRowsModified() > 0;
+    return modified > 0;
 }

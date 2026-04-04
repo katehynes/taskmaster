@@ -30,6 +30,8 @@ export interface GetTasksParams {
   fromDate?: string;
   toDate?: string;
   includeExpired?: boolean;
+  /** Tasks with no scheduled date */
+  outstanding?: boolean;
 }
 
 export async function getTasksByRange(params: GetTasksParams = {}): Promise<Task[]> {
@@ -38,6 +40,7 @@ export async function getTasksByRange(params: GetTasksParams = {}): Promise<Task
   if (params.fromDate) sp.set('fromDate', params.fromDate);
   if (params.toDate) sp.set('toDate', params.toDate);
   if (params.includeExpired) sp.set('includeExpired', 'true');
+  if (params.outstanding) sp.set('outstanding', 'true');
   const q = sp.toString();
   return request<Task[]>(`/tasks${q ? `?${q}` : ''}`);
 }
