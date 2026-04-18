@@ -2,6 +2,10 @@
 
 A calendar-centric to-do app with **accounts**, **JWT auth**, and data stored in **LibSQL**—either a [Turso](https://turso.tech/) database in the cloud or a local SQLite file when no remote URL is configured. The React frontend can be run standalone in development (Vite) or **served by the same Express process** as the API after you build it.
 
+## Live app
+
+**[https://taskmaster-74ky.onrender.com/](https://taskmaster-74ky.onrender.com/)** — hosted on [Render](https://render.com/)’s free tier. The URL **may change** if the service is recreated or moved; treat it as a convenience link, not a permanent API contract.
+
 ## Features
 
 - **Sign in / Register** — Email and password; session uses a bearer token stored in the browser. Tasks and settings are **per user**.
