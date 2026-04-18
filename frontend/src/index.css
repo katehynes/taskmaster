@@ -1,9 +1,40 @@
 :root {
-  font-family: system-ui, -apple-system, sans-serif;
+  /* Brand lavender (requested) — use for fills/atmosphere, not small text on this alone */
+  --lavender: #d3d3ff;
+  --lavender-soft: #ecebff;
+  --lavender-deep: #b8b8f2;
+
+  /* Dark purple for buttons & links: ~7:1 with white (WCAG AA for UI text) */
+  --accent: #4f46d8;
+  --accent-dark: #3f37b8;
+  --accent-light: rgba(79, 70, 216, 0.18);
+  --accent-faint: rgba(79, 70, 216, 0.09);
+
+  --surface: #ffffff;
+  --surface-muted: #faf9ff;
+
+  /* Body text on light lavender: ≥4.5:1; muted labels on pale surfaces */
+  --text: #16151f;
+  --muted: #3f3d52;
+
+  --border: rgba(79, 70, 216, 0.22);
+  --hover: var(--accent-faint);
+
+  --bg: linear-gradient(
+    165deg,
+    var(--lavender-soft) 0%,
+    var(--lavender) 42%,
+    #dedaf5 100%
+  );
+
+  --shadow-soft: 0 8px 32px rgba(55, 48, 120, 0.1);
+  --shadow-card: 0 4px 24px rgba(55, 48, 120, 0.08);
+
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #1e293b;
-  background-color: #f1f5f9;
+  color: var(--text);
+  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -11,6 +42,11 @@
 
 * {
   box-sizing: border-box;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 body {

@@ -8,7 +8,7 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ onClose, onSaved }: SettingsDialogProps) {
-  const [expirationDays, setExpirationDays] = useState<number>(2);
+  const [expirationDays, setExpirationDays] = useState<number>(30);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -43,7 +43,7 @@ export function SettingsDialog({ onClose, onSaved }: SettingsDialogProps) {
         ) : (
           <form onSubmit={handleSubmit}>
             <label className="settings-label">
-              <span className="settings-label-text">Tasks stay visible for this many days after their scheduled date:</span>
+              <span className="settings-label-text">Delete dated tasks this many days after their scheduled date:</span>
               <input
                 type="number"
                 min={0}
@@ -52,7 +52,9 @@ export function SettingsDialog({ onClose, onSaved }: SettingsDialogProps) {
                 className="settings-input"
               />
             </label>
-            <p className="settings-hint">Default is 2 days. After that, tasks are hidden from the list (unless you turn on “Show expired”).</p>
+            <p className="settings-hint">
+              Default is 30. The scheduled day counts as day 0; after that many full days, the task is removed from the database (outstanding tasks with no date are never auto-deleted).
+            </p>
             <div className="settings-actions">
               <button type="button" onClick={onClose}>
                 Cancel

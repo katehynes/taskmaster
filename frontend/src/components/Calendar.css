@@ -1,8 +1,10 @@
 .calendar {
   min-width: 280px;
   padding: 1rem;
-  background: var(--surface, #f8f9fa);
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
 }
 
 .calendar-header {
@@ -24,12 +26,12 @@
   cursor: pointer;
   padding: 0.25rem 0.5rem;
   line-height: 1;
-  color: var(--text, #333);
-  border-radius: 4px;
+  color: var(--text);
+  border-radius: 8px;
 }
 
 .calendar-nav:hover {
-  background: var(--hover, rgba(0, 0, 0, 0.06));
+  background: var(--hover);
 }
 
 .calendar-weekdays {
@@ -43,7 +45,7 @@
   text-align: center;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--muted, #666);
+  color: var(--muted);
 }
 
 .calendar-grid {
@@ -59,10 +61,10 @@
   justify-content: center;
   font-size: 0.9rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   background: transparent;
-  color: var(--text, #333);
+  color: var(--text);
 }
 
 .calendar-cell--empty {
@@ -71,19 +73,19 @@
 }
 
 .calendar-cell--day:hover {
-  background: var(--hover, rgba(0, 0, 0, 0.06));
+  background: var(--hover);
 }
 
 .calendar-cell--today {
-  background: var(--accent-light, rgba(59, 130, 246, 0.2));
+  background: var(--accent-light);
   font-weight: 600;
 }
 
 .calendar-cell--selected {
-  background: var(--accent, #3b82f6);
-  color: white;
+  background: var(--accent);
+  color: #fff;
 }
 
 .calendar-cell--selected:hover {
-  background: var(--accent-dark, #2563eb);
+  background: var(--accent-dark);
 }

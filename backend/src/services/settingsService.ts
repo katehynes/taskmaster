@@ -1,29 +1,48 @@
-import { getDb, saveDb } from "../db/index.js";
+import { getDb } from "../db/index.js";
 import { rowToSettings } from "../db/mappers.js";
 import type { SettingsRow } from "../db/mappers.js";
 import type { Settings, SettingsUpdateInput } from "../types.js";
+import { purgeExpiredTasksForUser } from "./taskService.js";
 
-export async function getSettings(): Promise<Settings> {
+export async function getSettings(userId: string): Promise<Settings> {
   const db = await getDb();
-  const rows = db.exec(
-    "SELECT id, owner_id, expiration_days FROM settings WHERE id = 'default'"
-  );
-  if (rows.length > 0 && rows[0].values.length > 0) {
-    const cols = rows[0].columns as string[];
-    const r: Record<string, unknown> = {};
-    cols.forEach((c: string, i: number) => (r[c] = rows[0].values[0][i]));
-    return rowToSettings(r as unknown as SettingsRow);
+  const stmt = await db.execute({
+    sql: "SELECT id, owner_id, expiration_days FROM settings WHERE id = ?",
+    args: [userId],
+  });
+  if (stmt.rows.length > 0) {
+    const row = stmt.rows[0] as Record<string, unknown>;
+    return rowToSettings(row as unknown as SettingsRow);
   }
-  return { id: "default", ownerId: null, expirationDays: 2 };
+  await db.execute({
+    sql: `INSERT INTO settings (id, owner_id, expiration_days) VALUES (?, ?, 30)`,
+    args: [userId, userId],
+  });
+  return {
+    id: userId,
+    ownerId: userId,
+    expirationDays: 30,
+  };
 }
 
-export async function updateSettings(input: SettingsUpdateInput): Promise<Settings> {
+export async function updateSettings(
+  userId: string,
+  input: SettingsUpdateInput
+): Promise<Settings> {
   const db = await getDb();
-  db.run(
-    "UPDATE settings SET expiration_days = ? WHERE id = 'default'",
-    [input.expirationDays]
-  );
-  saveDb();
-  const updated = await getSettings();
-  return updated;
+  await getSettings(userId);
+  await db.execute({
+    sql: "UPDATE settings SET expiration_days = ? WHERE id = ?",
+    args: [input.expirationDays, userId],
+  });
+  await purgeExpiredTasksForUser(userId);
+  const stmt = await db.execute({
+    sql: "SELECT id, owner_id, expiration_days FROM settings WHERE id = ?",
+    args: [userId],
+  });
+  if (stmt.rows.length > 0) {
+    const row = stmt.rows[0] as Record<string, unknown>;
+    return rowToSettings(row as unknown as SettingsRow);
+  }
+  return { id: userId, ownerId: userId, expirationDays: input.expirationDays };
 }

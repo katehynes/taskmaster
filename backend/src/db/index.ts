@@ -1,22 +1,34 @@
-import initSqlJs, { Database } from "sql.js";
+import { createClient, type Client } from "@libsql/client";
 import path from "node:path";
-import fs from "node:fs";
+import { pathToFileURL } from "node:url";
 import { INIT_SQL } from "./schema.js";
 
-const DB_PATH = path.join(process.cwd(), "data.sqlite");
+let client: Client | null = null;
+let initPromise: Promise<Client> | null = null;
 
-let db: Database | null = null;
+function createLibsqlClient(): Client {
+  const url =
+    process.env.TURSO_DATABASE_URL ??
+    pathToFileURL(path.join(process.cwd(), "data.sqlite")).href;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+  if (authToken !== undefined && authToken !== "") {
+    return createClient({ url, authToken });
+  }
+  return createClient({ url });
+}
 
 /** Recreate tasks table so for_date can be NULL (outstanding tasks). Idempotent. */
-function migrateTasksForDateNullable(database: Database): void {
-  const r = database.exec(
+async function migrateTasksForDateNullable(c: Client): Promise<void> {
+  const rs = await c.execute(
     "SELECT sql FROM sqlite_master WHERE type='table' AND name='tasks'"
   );
-  if (!r.length || !r[0].values.length) return;
-  const createSql = String(r[0].values[0][0] ?? "");
+  if (rs.rows.length === 0) return;
+  const createSql = String(rs.rows[0].sql ?? "");
   if (!createSql.includes("for_date TEXT NOT NULL")) return;
 
-  database.run(`CREATE TABLE tasks__new (
+  await c.batch(
+    [
+      `CREATE TABLE tasks__new (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     for_date TEXT,
@@ -25,53 +37,40 @@ function migrateTasksForDateNullable(database: Database): void {
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     owner_id TEXT
-  )`);
-  database.run(
-    `INSERT INTO tasks__new SELECT id, title, for_date, notes, completed, created_at, updated_at, owner_id FROM tasks`
-  );
-  database.run(`DROP TABLE tasks`);
-  database.run(`ALTER TABLE tasks__new RENAME TO tasks`);
-  database.run(
-    `CREATE INDEX IF NOT EXISTS idx_tasks_for_date ON tasks(for_date)`
-  );
-  database.run(
-    `CREATE INDEX IF NOT EXISTS idx_tasks_owner_id_for_date ON tasks(owner_id, for_date)`
+  )`,
+      `INSERT INTO tasks__new SELECT id, title, for_date, notes, completed, created_at, updated_at, owner_id FROM tasks`,
+      `DROP TABLE tasks`,
+      `ALTER TABLE tasks__new RENAME TO tasks`,
+      `CREATE INDEX IF NOT EXISTS idx_tasks_for_date ON tasks(for_date)`,
+      `CREATE INDEX IF NOT EXISTS idx_tasks_owner_id_for_date ON tasks(owner_id, for_date)`,
+    ],
+    "write"
   );
 }
 
-export async function getDb(): Promise<Database> {
-  if (db) return db;
-
-  const SQL = await initSqlJs();
-
-  if (fs.existsSync(DB_PATH)) {
-    const buf = fs.readFileSync(DB_PATH);
-    db = new SQL.Database(buf);
-  } else {
-    db = new SQL.Database();
-  }
-
-  db.run(INIT_SQL);
-  migrateTasksForDateNullable(db);
-  saveDb();
-
-  return db;
+async function initClient(): Promise<Client> {
+  const c = createLibsqlClient();
+  await c.executeMultiple(INIT_SQL);
+  await migrateTasksForDateNullable(c);
+  return c;
 }
 
-export function saveDb(): void {
-  if (!db) return;
-  const data = db.export();
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  fs.writeFileSync(DB_PATH, Buffer.from(data));
+export async function getDb(): Promise<Client> {
+  if (client) return client;
+  initPromise ??= initClient().then((c) => {
+    client = c;
+    return c;
+  });
+  return initPromise;
 }
+
+/** @deprecated Writes are persisted automatically; kept for minimal churn in callers. */
+export function saveDb(): void {}
 
 export function closeDb(): void {
-  if (db) {
-    saveDb();
-    db.close();
-    db = null;
+  if (client) {
+    client.close();
+    client = null;
+    initPromise = null;
   }
 }

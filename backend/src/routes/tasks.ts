@@ -6,22 +6,23 @@ import {
   deleteTask,
 } from "../services/taskService.js";
 import type { TaskCreateInput, TaskUpdateInput } from "../types.js";
+import { requireAuth } from "../middleware/requireAuth.js";
 
 export const tasksRouter = Router();
+tasksRouter.use(requireAuth);
 
 tasksRouter.get("/", async (req, res) => {
   try {
+    const userId = req.userId!;
     const forDate = req.query.forDate as string | undefined;
     const fromDate = req.query.fromDate as string | undefined;
     const toDate = req.query.toDate as string | undefined;
-    const includeExpired = req.query.includeExpired === "true";
     const outstanding = req.query.outstanding === "true";
 
-    const tasks = await getTasks({
+    const tasks = await getTasks(userId, {
       forDate,
       fromDate,
       toDate,
-      includeExpired,
       outstanding,
     });
     res.json(tasks);
@@ -38,7 +39,7 @@ tasksRouter.post("/", async (req, res) => {
       res.status(400).json({ error: "title is required" });
       return;
     }
-    const task = await createTask({
+    const task = await createTask(req.userId!, {
       title: body.title,
       forDate: body.forDate ?? null,
       notes: body.notes ?? null,
@@ -54,7 +55,7 @@ tasksRouter.patch("/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const body = req.body as TaskUpdateInput;
-    const task = await updateTask(id, body);
+    const task = await updateTask(req.userId!, id, body);
     if (!task) {
       res.status(404).json({ error: "Task not found" });
       return;
@@ -69,7 +70,7 @@ tasksRouter.patch("/:id", async (req, res) => {
 tasksRouter.delete("/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const deleted = await deleteTask(id);
+    const deleted = await deleteTask(req.userId!, id);
     if (!deleted) {
       res.status(404).json({ error: "Task not found" });
       return;

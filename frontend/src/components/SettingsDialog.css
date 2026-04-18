@@ -1,7 +1,7 @@
 .settings-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(22, 21, 35, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,11 +9,13 @@
 }
 
 .settings-dialog {
-  background: var(--surface, #fff);
+  background: var(--surface);
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 12px;
   min-width: 360px;
   max-width: 90vw;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
 }
 
 .settings-dialog h3 {
@@ -33,15 +35,16 @@
 
 .settings-input {
   padding: 0.5rem;
-  border: 1px solid var(--border, #ccc);
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   font-size: 1rem;
   width: 80px;
+  background: var(--surface-muted);
 }
 
 .settings-hint {
   font-size: 0.85rem;
-  color: var(--muted, #666);
+  color: var(--muted);
   margin: 0 0 1rem;
 }
 
@@ -53,16 +56,17 @@
 
 .settings-actions button {
   padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: 1px solid var(--border, #ccc);
-  background: var(--surface, #fff);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
   cursor: pointer;
 }
 
 .settings-actions button[type='submit'] {
-  background: var(--accent, #3b82f6);
-  color: white;
-  border-color: var(--accent, #3b82f6);
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
 }
 
 .settings-actions button[type='submit']:disabled {

@@ -1,14 +1,14 @@
 /**
- * A task is visible if today <= forDate + expirationDays.
- * Equivalently: forDate >= today - expirationDays.
+ * Dated tasks are kept through the calendar day `forDate + expirationDays` (inclusive).
+ * After that day, they are purged from the database (see taskService purge).
  */
-export function isTaskVisible(
+export function isTaskWithinRetention(
   forDate: string,
   expirationDays: number,
   today: string
 ): boolean {
-  const expiry = addDays(forDate, expirationDays);
-  return today <= expiry;
+  const lastKeptDay = addDays(forDate, expirationDays);
+  return today <= lastKeptDay;
 }
 
 export function addDays(isoDate: string, days: number): string {

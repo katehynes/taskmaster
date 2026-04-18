@@ -3,14 +3,38 @@ import { Calendar } from './components/Calendar';
 import { DayTaskList } from './components/DayTaskList';
 import { OutstandingTaskList } from './components/OutstandingTaskList';
 import { SettingsDialog } from './components/SettingsDialog';
+import { LoginScreen } from './components/LoginScreen';
 import { useTasksForDate } from './hooks/useTasksForDate';
 import { useOutstandingTasks } from './hooks/useOutstandingTasks';
 import { useBackendStatus } from './hooks/useBackendStatus';
+import { useAuth } from './auth/AuthContext';
 import { toISODate } from './utils/dateUtils';
 import * as api from './api/tasksApi';
 import './App.css';
 
 function App() {
+  const { user, loading: authLoading, logout } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="app">
+        <p className="app-loading">Loading…</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  return <TaskmasterApp onLogout={logout} />;
+}
+
+interface TaskmasterAppProps {
+  onLogout: () => void;
+}
+
+function TaskmasterApp({ onLogout }: TaskmasterAppProps) {
   const today = toISODate(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [activeView, setActiveView] = useState<'day' | 'calendar' | 'outstanding'>('day');
@@ -110,6 +134,13 @@ function App() {
             title="Settings"
           >
             ⚙
+          </button>
+          <button
+            type="button"
+            className="app-logout"
+            onClick={onLogout}
+          >
+            Sign Out
           </button>
           <button
             type="button"
@@ -321,3 +352,4 @@ function NewTaskModal({
 }
 
 export default App;
+

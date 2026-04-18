@@ -3,10 +3,11 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: var(--surface, #fff);
-  border-radius: 8px;
+  background: var(--surface);
+  border-radius: 12px;
   padding: 1rem;
-  border: 1px solid var(--border, #e5e7eb);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
 }
 
 .day-task-list-header {
@@ -26,16 +27,17 @@
 
 .day-task-list-add {
   padding: 0.4rem 0.75rem;
-  background: var(--accent, #3b82f6);
-  color: white;
+  background: var(--accent);
+  color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .day-task-list-add:hover {
-  background: var(--accent-dark, #2563eb);
+  background: var(--accent-dark);
 }
 
 .day-task-list-content {
@@ -44,7 +46,7 @@
 }
 
 .day-task-list-empty {
-  color: var(--muted, #666);
+  color: var(--muted);
   margin: 0;
 }
 
@@ -59,7 +61,7 @@
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border, #eee);
+  border-bottom: 1px solid var(--border);
 }
 
 .day-task-item:last-child {
@@ -94,7 +96,7 @@
   background: none;
   border: none;
   font-size: 0.8rem;
-  color: var(--accent, #3b82f6);
+  color: var(--accent);
   cursor: pointer;
   padding: 0;
 }
@@ -102,7 +104,7 @@
 .day-task-notes-text {
   margin: 0.25rem 0 0;
   font-size: 0.85rem;
-  color: var(--muted, #666);
+  color: var(--muted);
   white-space: pre-wrap;
 }
 
@@ -128,15 +130,15 @@
 .day-task-edit-title {
   padding: 0.35rem 0.5rem;
   font-size: 1rem;
-  border: 1px solid var(--border, #ccc);
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 
 .day-task-edit-notes {
   padding: 0.35rem 0.5rem;
   font-size: 0.9rem;
-  border: 1px solid var(--border, #ccc);
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   resize: vertical;
 }
 
@@ -147,16 +149,17 @@
 
 .day-task-edit-actions button {
   padding: 0.35rem 0.75rem;
-  border-radius: 4px;
-  border: 1px solid var(--border, #ccc);
-  background: var(--surface, #fff);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
   cursor: pointer;
 }
 
 .day-task-edit-actions button[type='submit'] {
-  background: var(--accent, #3b82f6);
-  color: white;
-  border-color: var(--accent, #3b82f6);
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
 }
 
 .day-task-edit-checkbox {
@@ -164,7 +167,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  color: var(--muted, #475569);
+  color: var(--muted);
   cursor: pointer;
 }
 
@@ -178,28 +181,28 @@
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.9rem;
-  color: var(--muted, #475569);
+  color: var(--muted);
 }
 
 .day-task-edit-date {
   padding: 0.35rem 0.5rem;
   font-size: 0.95rem;
-  border: 1px solid var(--border, #ccc);
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   max-width: 100%;
 }
 
 .day-task-edit-date-hint {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--muted, #64748b);
+  color: var(--muted);
   line-height: 1.35;
 }
 
 .outstanding-task-list-hint {
   margin: 0 0 1rem;
   font-size: 0.9rem;
-  color: var(--muted, #64748b);
+  color: var(--muted);
   line-height: 1.4;
 }
 
@@ -208,19 +211,19 @@
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.9rem;
-  color: var(--muted, #475569);
+  color: var(--muted);
 }
 
 .outstanding-assign-date {
   padding: 0.35rem 0.5rem;
   font-size: 0.95rem;
-  border: 1px solid var(--border, #ccc);
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   max-width: 100%;
 }
 
 .outstanding-assign-help {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--muted, #64748b);
+  color: var(--muted);
 }
