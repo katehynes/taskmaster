@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-    "build": "npm ci --prefix frontend && npm run build --prefix frontend && npm ci --prefix backend && npm run build --prefix backend",
+    "build": "NODE_ENV=development npm ci --prefix frontend && npm run build --prefix frontend && NODE_ENV=development npm ci --prefix backend && npm run build --prefix backend",
     "start": "node backend/dist/index.js"
   },
   "devDependencies": {
